@@ -70,6 +70,7 @@ public class T548AutoNew extends LinearOpMode {
     DcMotor lr;
     DcMotor lf;
     Servo color;
+    GyroSensor g;
     private boolean blueTeam = false;
     private int delayStartTime = 0;
     private ElapsedTime runtime = new ElapsedTime();
@@ -85,13 +86,14 @@ public class T548AutoNew extends LinearOpMode {
         }
     }
     // Read the game pad to set the team color and delay start time
-    private void SelectTeamColor() throws InterruptedException {
+    private void SelectTeamColorAndLocation() throws InterruptedException {
         //This while loop runs forever until user presses start to break out of loop
         while (true) {
             //Pressing start breaks out of loop
             if (gamepad1.start) {
                 break;
             }
+            if(gamepad1.dpad
             //If User 1 presses B, then the team selected is red
             if (gamepad1.b) {
                 blueTeam = false;
@@ -568,6 +570,64 @@ public class T548AutoNew extends LinearOpMode {
             // undecided beacon color, don't prese any button
         }
     }
+    private void SelectTeamLocationAndColor() throws InterruptedException {
+        //This while loop runs forever until user presses start to break out of loop
+        while (true) {
+            //Pressing start breaks out of loop
+            if (gamepad1.start) {
+                break;
+            }
+            //If User 1 presses dpad_left, then the team selected is left
+
+        }
+        telemetry.addData("Selected leftSide ", leftSide);
+        telemetry.update();
+    }
+
+    //Clasp Glyph
+    private void claspGlyph() throws InterruptedException{
+        glyphl.setPosition(0.6);
+        glyphr.setPosition(0.2);
+    }
+
+    //Release Glyph
+    private void releaseGlyph() throws InterruptedException{
+        glyphl.setPosition(0);
+        glyphr.setPosition(1);
+    }
+    //Put Glyph into box
+    private void Touchdown() throws InterruptedException{
+        claspGlyph();
+        if(leftSide && blueTeam){
+            DriveForwardByEncoder(0.3, 22,2000);
+            TurnByGyroLeft(-90, 0.15);
+            DriveForwardByEncoder(0.3, 44,2000);
+            releaseGlyph();
+        }
+
+        if(!leftSide && blueTeam){
+            DriveForwardByEncoder(0.3, 30,2000);
+            TurnByGyroLeft(-90, 0.15);
+            DriveForwardByEncoder(0.3,20 ,2000);
+            releaseGlyph();
+        }
+
+        if(!leftSide && !blueTeam){
+            DriveForwardByEncoder(0.3, 22,2000);
+            TurnByGyroLeft(-90, 0.15);
+            DriveForwardByEncoder(0.3, 44,2000);
+            releaseGlyph();
+        }
+
+        if(leftSide && !blueTeam){
+            DriveForwardByEncoder(0.3, 30,2000);
+            TurnByGyroLeft(-90, 0.15);
+            DriveForwardByEncoder(0.3,20,2000);
+            releaseGlyph();
+        }
+
+        else{
+        }
 
 
     // Team 548 Autonomous main program
