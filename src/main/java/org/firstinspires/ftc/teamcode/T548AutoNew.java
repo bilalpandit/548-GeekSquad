@@ -1,36 +1,3 @@
-/*
-Copyright (c) 2016 Robert Atkinson
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted (subject to the limitations in the disclaimer below) provided that
-the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-Neither the name of Robert Atkinson nor the names of his contributors may be used to
-endorse or promote products derived from this software without specific prior
-written permission.
-
-NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
-LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESSFOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 package org.firstinspires.ftc.teamcode;
 
 //import com.qualcomm.ftccommon.DbgLog;
@@ -40,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
@@ -69,9 +38,12 @@ public class T548AutoNew extends LinearOpMode {
     DcMotor rr;
     DcMotor lr;
     DcMotor lf;
+    Servo glyphl;
+    Servo glyphr;
     Servo color;
     GyroSensor g;
     private boolean blueTeam = false;
+    private boolean leftSide= false;
     private int delayStartTime = 0;
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -86,14 +58,13 @@ public class T548AutoNew extends LinearOpMode {
         }
     }
     // Read the game pad to set the team color and delay start time
-    private void SelectTeamColorAndLocation() throws InterruptedException {
+    private void SelectTeamColor() throws InterruptedException {
         //This while loop runs forever until user presses start to break out of loop
         while (true) {
             //Pressing start breaks out of loop
             if (gamepad1.start) {
                 break;
             }
-            if(gamepad1.dpad
             //If User 1 presses B, then the team selected is red
             if (gamepad1.b) {
                 blueTeam = false;
@@ -123,6 +94,42 @@ public class T548AutoNew extends LinearOpMode {
         telemetry.update();
     }
 
+    private void SelectTeamLocationAndColor() throws InterruptedException {
+        //This while loop runs forever until user presses start to break out of loop
+        while (true) {
+            //Pressing start breaks out of loop
+            if (gamepad1.start) {
+                break;
+            }
+            if (gamepad1.b) {
+                blueTeam = false;
+                RobotSleep(200);
+            }
+            //If User 1 presses X, then the team selected is blue
+            if (gamepad1.x) {
+                blueTeam = true;
+                RobotSleep(200);
+            }
+            //If User 1 presses dpad_left, then the team selected is left
+            if(gamepad1.dpad_left){
+                leftSide=true;
+                RobotSleep(200);
+            }
+            //If User 1 presses dpad_right, then the team selected is right
+            if(gamepad1.dpad_right){
+                leftSide=false;
+                RobotSleep(200);
+            }
+
+            telemetry.addData("blueTeam ", blueTeam);
+            telemetry.addData("leftSide ", leftSide);
+        }
+        telemetry.addData("Selected blueTeam ", blueTeam);
+        telemetry.addData("leftSide ", leftSide);
+        //telemetry.addData("Selected delayStart ", delayStartTime);
+        telemetry.update();
+    }
+
     //This function takes the delay time and sleeps the robot for any amount of seconds
     private void DelayTime(int delayTimeInSec) throws InterruptedException {
         RobotSleep(delayTimeInSec * 1000);
@@ -147,16 +154,16 @@ public class T548AutoNew extends LinearOpMode {
 
     private void DriveByTimeCoast(double leftPower, double rightPower, int driveTime) throws InterruptedException {
         rf.setPower(rightPower);
-        lf.setPower(leftPower);
+        //lf.setPower(leftPower);
         rr.setPower(rightPower);
         lr.setPower(leftPower);
         RobotSleep(driveTime);
         rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        //lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rf.setPower(0);
-        lf.setPower(0);
+        //lf.setPower(0);
         rr.setPower(0);
         lr.setPower(0);
     }
@@ -350,6 +357,221 @@ public class T548AutoNew extends LinearOpMode {
         lr.setPower(0);
     }
 
+    /*private void TurnToGyroHeading(double leftSpeed, double rightSpeed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+
+        boolean turningRight = (leftSpeed > rightSpeed);
+        int currentHeading;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+
+            // turn on motors
+            lf.setPower(leftSpeed);
+            rf.setPower(rightSpeed);
+            lr.setPower(leftSpeed);
+            rr.setPower(rightSpeed);
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            double timeOutS = timeOutMillisecond / 1000.0;
+            while (opModeIsActive() && (runtime.seconds() < timeOutS)) {
+                currentHeading = g.getIntegratedZValue();
+                if (turningRight) {  // gyro value decreasing turn right is clockwise
+                    if (currentHeading <= targetHeading)
+                        break;
+                } else {
+                    if (currentHeading >= targetHeading)
+                        break;
+                }
+                //DbgLog.msg("T548 TurnToGyroHeading cH = " + currentHeading);
+                // Display it for debug.
+                //telemetry.addData("currentHeading = ", currentHeading);
+                //telemetry.update();
+            }
+
+            // Stop all motion;
+            rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            lr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            lf.setPower(0);
+            rf.setPower(0);
+            lr.setPower(0);
+            rr.setPower(0);
+            //DbgLog.msg("T548 TurnToGyroHeading Motor Stop gyro = " + gyro.getIntegratedZValue());
+        }
+    }
+
+
+    // Turn left or right by gyro sensor given the turnAngle in degree
+    private void TurnByGyro(double leftSpeed, double rightSpeed, int turnAngle, double timeOutMillisecond) throws InterruptedException {
+        boolean turningRight = (leftSpeed > rightSpeed);
+        int currentHeading = g.getIntegratedZValue();
+        int targetHeading;
+        if (turningRight) {
+            // Right turn decreases gyro angle
+            targetHeading = currentHeading - turnAngle;
+        } else {
+            targetHeading = currentHeading + turnAngle;
+        }
+
+        TurnToGyroHeading(leftSpeed, rightSpeed, targetHeading, timeOutMillisecond);
+
+/*
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+
+            // turn on motors
+            leftWheel.setPower(leftSpeed);
+            rightWheel.setPower(rightSpeed);
+
+            double timeOutS = timeOutMillisecond / 1000.0;
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() && (runtime.seconds() < timeOutS)) {
+                currentHeading = gyro.getIntegratedZValue();
+                if (turningRight) {
+                    // When turning right, gyro value is decreasing. Turn right is clockwise when robot is viewed from the top
+                    if (currentHeading <= targetHeading)
+                        break;
+                } else {
+                    if (currentHeading >= targetHeading)
+                        break;
+                }
+
+                // Display it for debug.
+                telemetry.addData("currentHeading = ", currentHeading);
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            rightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftWheel.setPower(0);
+            rightWheel.setPower(0);
+        }
+
+
+    }
+
+    // Turn left by gyro sensor given the turnAngle in degree
+    private void TurnLeftByGyro(double speed, int turnAngle, double timeOutMillisecond) throws InterruptedException {
+        TurnByGyro(-speed, speed, turnAngle, timeOutMillisecond);
+    }
+
+    // Turn right by gyro sensor given the turnAngle in degree
+    private void TurnRightByGyro(double speed, int turnAngle, double timeOutMillisecond) throws InterruptedException {
+        TurnByGyro(speed, -speed, turnAngle, timeOutMillisecond);
+    }
+
+    // Turn left by gyro sensor given the turnAngle in degree. Left right wheel power is different.
+    private void TurnLeftByGyroDiffWheel(double leftSpeed, double rightSpeed, int turnAngle, double timeOutMillisecond) throws InterruptedException {
+        TurnByGyro(-leftSpeed, rightSpeed, turnAngle, timeOutMillisecond);
+    }
+
+    // Turn right by gyro sensor given the turnAngle in degree. Left right wheel power is different.
+    private void TurnRightByGyroDiffWheel(double leftSpeed, double rightSpeed, int turnAngle, double timeOutMillisecond) throws InterruptedException {
+        TurnByGyro(leftSpeed, -rightSpeed, turnAngle, timeOutMillisecond);
+    }
+
+    // Turn to heading where left right wheel power are controllable
+    private void TurnleftToGyroHeadingDiffWheel(double leftSpeed, double rightSpeed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+        TurnToGyroHeading(-leftSpeed, rightSpeed, targetHeading, timeOutMillisecond);
+    }
+
+    // Turn to heding where left right wheel power are controllable
+    private void TurnRightToGyroHeadingDiffWheel(double leftSpeed, double rightSpeed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+        TurnToGyroHeading(leftSpeed, -rightSpeed, targetHeading, timeOutMillisecond);
+    }
+
+    // Turn left to an absolute gyro heading
+    private void TurnLeftToGyroHeading(double speed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+        TurnToGyroHeading(-speed, speed, targetHeading, timeOutMillisecond);
+    }
+
+    // Turn right to an absolute gyro heading
+    private void TurnRightToGyroHeading(double speed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+        TurnToGyroHeading(speed, -speed, targetHeading, timeOutMillisecond);
+    }
+
+    //turn to specific heading, left or right
+    private void TurnLeftOrRightToGyroHeading(double speed, int targetHeading, double timeOutMillisecond) throws InterruptedException {
+        int currentHeading = g.getIntegratedZValue();
+     /*   if (Math.abs(currentHeading - targetHeading) <= 2) {
+            // Don't turn if we are already within 2 degree of the target heading
+            return;
+        }*/
+
+        // Clockwise turn decrease gyro value
+       /* if (currentHeading < targetHeading) {
+            // Target is to the left, need counter clockwise turn
+            TurnLeftToGyroHeading(speed, targetHeading, timeOutMillisecond);
+        } else {
+            TurnRightToGyroHeading(speed, targetHeading, timeOutMillisecond);
+        }
+    }
+
+
+    // Basic function to provide driving by wheel encoder
+/*
+    private void DriveByEncoder_NoLongerNeeded(double speed,
+                                               double leftInches, double rightInches,
+                                               double timeOutMillisecond) {
+        int newLeftTarget;
+        int newRightTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+            double timeOutS = timeOutMillisecond / 1000.0;
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = leftWheel.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightTarget = rightWheel.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+            leftWheel.setTargetPosition(newLeftTarget);
+            rightWheel.setTargetPosition(newRightTarget);
+
+            // Turn On RUN_TO_POSITION
+            leftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftWheel.setPower(Math.abs(speed));
+            rightWheel.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeOutS) &&
+                    (leftWheel.isBusy() && rightWheel.isBusy())) {
+
+                // Display it for the driver.
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
+                        leftWheel.getCurrentPosition(),
+                        rightWheel.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            rightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftWheel.setPower(0);
+            rightWheel.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            leftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+*/
+
+
+
+
     // Sense the beacon color
     //private boolean beaconColorIsRed() {
     //    return ((beaconSensor.red() > 1) && (beaconSensor.blue() < 5));
@@ -508,20 +730,24 @@ public class T548AutoNew extends LinearOpMode {
     private void InitializeRobot() throws InterruptedException {
         // mapping to config file T548.xml
 
-        lf = hardwareMap.dcMotor.get("RightFront");
+        rf = hardwareMap.dcMotor.get("RightFront");
         lr = hardwareMap.dcMotor.get("LeftBack");
         rr = hardwareMap.dcMotor.get("RightBack");
         lf = hardwareMap.dcMotor.get("LeftFront");
         jsensor = hardwareMap.colorSensor.get("JewelSensor");
-        //color = hardwareMap.servo.get("ColorServo");
+        color = hardwareMap.servo.get("ColorServo");
+        glyphl = hardwareMap.servo.get("GlyphLeft");
+        glyphr = hardwareMap.servo.get("GlyphRight");
 
 
 
         // Motor setup
-        rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rf.setDirection(DcMotor.Direction.REVERSE);
+        lr.setDirection(DcMotor.Direction.REVERSE);
 
 
         // set power to zero to avoid a FTC bug
@@ -530,7 +756,9 @@ public class T548AutoNew extends LinearOpMode {
         lf.setPower(0);
         lr.setPower(0);
         rr.setPower(0);
-        //color.setPosition(0.5);
+        color.setPosition(0);
+        glyphl.setPosition(0.5);
+        glyphr.setPosition(0);
 
 
 
@@ -552,40 +780,28 @@ public class T548AutoNew extends LinearOpMode {
         if (beaconColor == BEACON_BLUE) {
             if (blueTeam) {
                 // Move to the position where the sensor were
-                DriveBackwardByEncoder(0.3, 5, 3000);
-            } else {
-                DriveBackwardByEncoder(0.2, 1.0, 2000);
+                DriveForwardByTime(0.2,2000);
+            }
+            else if(!blueTeam){
+                DriveBackwardByTime(0.2,2000);
+                RobotSleep(200);
             }
             RobotSleep(200);
         } else if (beaconColor == BEACON_RED) {
             // Beacon is red at sensing position
             if (blueTeam) {
-                DriveForwardByEncoder(0.2, 1, 2000);
-            } else {
+                DriveBackwardByTime(0.2,2000);
+            } else if(!blueTeam){
                 // Move to the other button
-                //DriveForwardByEncoder(0.3, 5, 3000);
+                DriveForwardByTime(0.2,2000);
                 RobotSleep(200);
             }
         } else {
             // undecided beacon color, don't prese any button
         }
     }
-    private void SelectTeamLocationAndColor() throws InterruptedException {
-        //This while loop runs forever until user presses start to break out of loop
-        while (true) {
-            //Pressing start breaks out of loop
-            if (gamepad1.start) {
-                break;
-            }
-            //If User 1 presses dpad_left, then the team selected is left
 
-        }
-        telemetry.addData("Selected leftSide ", leftSide);
-        telemetry.update();
-    }
-
-    //Clasp Glyph
-    private void claspGlyph() throws InterruptedException{
+    /*private void claspGlyph() throws InterruptedException{
         glyphl.setPosition(0.6);
         glyphr.setPosition(0.2);
     }
@@ -596,48 +812,47 @@ public class T548AutoNew extends LinearOpMode {
         glyphr.setPosition(1);
     }
     //Put Glyph into box
-    private void Touchdown() throws InterruptedException{
+    private void Touchdown() throws InterruptedException {
         claspGlyph();
-        if(leftSide && blueTeam){
-            DriveForwardByEncoder(0.3, 22,2000);
+        if (leftSide && blueTeam) {
+            DriveForwardByEncoder(0.3, 22, 2000);
             TurnByGyroLeft(-90, 0.15);
-            DriveForwardByEncoder(0.3, 44,2000);
+            DriveForwardByEncoder(0.3, 44, 2000);
             releaseGlyph();
         }
 
-        if(!leftSide && blueTeam){
-            DriveForwardByEncoder(0.3, 30,2000);
+        if (!leftSide && blueTeam) {
+            DriveForwardByEncoder(0.3, 30, 2000);
             TurnByGyroLeft(-90, 0.15);
-            DriveForwardByEncoder(0.3,20 ,2000);
+            DriveForwardByEncoder(0.3, 20, 2000);
             releaseGlyph();
         }
 
-        if(!leftSide && !blueTeam){
-            DriveForwardByEncoder(0.3, 22,2000);
+        if (!leftSide && !blueTeam) {
+            DriveForwardByEncoder(0.3, 22, 2000);
             TurnByGyroLeft(-90, 0.15);
-            DriveForwardByEncoder(0.3, 44,2000);
+            DriveForwardByEncoder(0.3, 44, 2000);
             releaseGlyph();
         }
 
-        if(leftSide && !blueTeam){
-            DriveForwardByEncoder(0.3, 30,2000);
+        if (leftSide && !blueTeam) {
+            DriveForwardByEncoder(0.3, 30, 2000);
             TurnByGyroLeft(-90, 0.15);
-            DriveForwardByEncoder(0.3,20,2000);
+            DriveForwardByEncoder(0.3, 20, 2000);
             releaseGlyph();
+        } else {
         }
-
-        else{
-        }
-
-
+    }*/
     // Team 548 Autonomous main program
     @Override
     public void runOpMode() throws InterruptedException{
         InitializeRobot();
         waitForStart();
-        DriveForwardByEncoder(0.2,24,1200);
         sleep(3000);
         ReadColor();
+        sleep(2000);
+        color.setPosition(1);
+        DriveBackwardByTime(0.2,2000);
     }
 }
 
