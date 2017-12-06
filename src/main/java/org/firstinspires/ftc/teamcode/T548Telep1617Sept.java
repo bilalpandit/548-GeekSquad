@@ -21,8 +21,9 @@ public class T548Telep1617Sept extends OpMode {
     DcMotor lr;
     DcMotor lf;
     DcMotor LinearSlide;
-    Servo glyphl;
-    Servo glyphr;
+
+    DcMotor GlyphLeft
+    DcMotor GlyphRight
     boolean slideMotorOn = false;
     double slideModeTimeStamp;
     boolean slideRetainingMode = false;
@@ -46,8 +47,10 @@ public class T548Telep1617Sept extends OpMode {
         lf.setPower(0);
         lr.setPower(0);
         rr.setPower(0);
-        glyphl.setPosition(0.5);
-        glyphr.setPosition(0);
+        GlyphLeft.setPower(0);
+        GlyphRight.setPower(0);
+     //   glyphl.setPosition(0.5);
+     //   glyphr.setPosition(0);
     }
 
     public void init() {
@@ -174,16 +177,16 @@ public class T548Telep1617Sept extends OpMode {
 
     }
 
-    public void glyphHold(){
-        if (glyph()){
-            glyphl.setPosition(0.6);
-            glyphr.setPosition(0.2);
-        }
+   // public void glyphHold(){
+       // if (glyph()){
+          //  glyphl.setPosition(0.6);
+           // glyphr.setPosition(0.2);
+       // }
 
-        else {
-            glyphl.setPosition(0);
-            glyphr.setPosition(1);
-        }
+      //  else {
+           // glyphl.setPosition(0);
+          //  glyphr.setPosition(1);
+      //  }
 
     }
 
@@ -228,14 +231,23 @@ public class T548Telep1617Sept extends OpMode {
                 LinearSlide.setPower(0);
             }
         }
-
+     public void GlyphTread() {
+            // powering tread
+        if (glyph()) {
+            GlyphLeft.setPower(.2);
+            GlyphRight.setPower(.2);
+        }
+        else{
+            GlyphRight.setPower(0);
+            GlyphLeft.setPower(0);
+        }
     }
 
 
 
     //Main control function for Teleop
     public void loop() {
-        glyphHold();
+        GlyphTread();
         drive();
         Mechanum();
         runLinearSlide();
@@ -243,4 +255,7 @@ public class T548Telep1617Sept extends OpMode {
 
 
 }
+
+
+
 
